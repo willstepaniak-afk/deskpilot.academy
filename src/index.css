@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Deep navy dark-mode base — premium, authoritative */
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+
+    /* Cards slightly lifted from the base */
+    --card: 222 44% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222 44% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary: electric blue — energy, trust, tech-forward */
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 6%;
+
+    /* Secondary: subtle navy-gray for backgrounds */
+    --secondary: 222 30% 12%;
+    --secondary-foreground: 210 40% 98%;
+
+    /* Muted: subdued tones for non-essential elements */
+    --muted: 222 25% 16%;
+    --muted-foreground: 215 20% 55%;
+
+    /* Accent: bold warm orange-red — CTA color, urgency, action */
+    --accent: 12 90% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive: clear red for errors/warnings */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders/inputs: subtle separation */
+    --border: 222 20% 16%;
+    --input: 222 20% 16%;
+
+    /* Ring: matches primary for focus states */
+    --ring: 217 91% 60%;
+    --radius: 0.5rem;
+
+    /* Success green */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
