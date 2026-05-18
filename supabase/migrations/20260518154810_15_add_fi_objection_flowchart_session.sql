@@ -10,9 +10,13 @@
 
 DO $$
 DECLARE
-  v_level_id uuid := '50a723bf-ad1b-4202-a164-5c543f5cade8';
+  v_campus_id uuid;
+  v_level_id uuid;
   v_type_video uuid;
 BEGIN
+  -- Get the correct campus and level IDs dynamically
+  SELECT id INTO v_campus_id FROM campuses WHERE slug = 'fi-mastery';
+  SELECT id INTO v_level_id FROM levels WHERE campus_id = v_campus_id AND level_order = 2;
   SELECT id INTO v_type_video FROM session_types WHERE slug = 'video';
 
   -- Shift existing sessions 2-5 to 3-6
