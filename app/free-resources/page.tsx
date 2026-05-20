@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { SectionHeading } from '@/components/marketing/SectionHeading';
-import { ResourceRequestDialog, type Resource } from '@/components/marketing/ResourceRequestDialog';
+import { LeadMagnetCard, type LeadMagnet } from '@/components/marketing/LeadMagnetCard';
 import { JsonLd } from '@/components/seo/JsonLd';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { buildWebPageLd } from '@/lib/seo';
 import { SITE } from '@/lib/site';
 
@@ -13,11 +11,11 @@ const URL = `${SITE.url}/free-resources`;
 export const metadata: Metadata = {
   title: 'Free Resources',
   description:
-    'Operator-built playbooks, checklists, and templates from DeskPilot Academy — free, email-gated. No card, no spam.',
+    'Operator-built playbooks, checklists, and templates from DeskPilot Academy. Coming soon — drop your email to be notified the moment each one is ready.',
   alternates: { canonical: URL },
 };
 
-const RESOURCES: Resource[] = [
+const RESOURCES: LeadMagnet[] = [
   {
     slug: 'fi-menu-cheatsheet',
     title: 'F&I Menu Cheatsheet',
@@ -57,24 +55,13 @@ export default function FreeResourcesPage() {
       <Container className="py-16 space-y-12">
         <SectionHeading
           eyebrow="Free resources"
-          title="Operator playbooks, on the house."
-          description="Email-gated, but free. Five resources at launch, more on the way."
+          title="Operator playbooks, on the way."
+          description="Five playbooks in production. Drop your email on the one you want first and we will send it the moment it ships."
         />
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {RESOURCES.map((r) => (
             <li key={r.slug}>
-              <Card className="h-full p-5 flex flex-col">
-                {r.badge && (
-                  <Badge variant="outline" className="self-start mb-3">
-                    {r.badge}
-                  </Badge>
-                )}
-                <h3 className="text-lg font-semibold">{r.title}</h3>
-                <p className="mt-2 text-sm text-muted-foreground flex-1">{r.description}</p>
-                <div className="mt-5">
-                  <ResourceRequestDialog resource={r} />
-                </div>
-              </Card>
+              <LeadMagnetCard resource={r} />
             </li>
           ))}
         </ul>

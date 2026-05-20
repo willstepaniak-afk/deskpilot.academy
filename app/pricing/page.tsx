@@ -3,7 +3,7 @@ import { Container } from '@/components/layout/Container';
 import { SectionHeading } from '@/components/marketing/SectionHeading';
 import { FoundersBanner } from '@/components/marketing/FoundersBanner';
 import { PricingCard } from '@/components/marketing/PricingCard';
-import { PricingComparisonTable } from '@/components/marketing/PricingComparisonTable';
+import { WhyDeskPilot } from '@/components/marketing/WhyDeskPilot';
 import { FaqAccordion } from '@/components/marketing/FaqAccordion';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -79,11 +79,11 @@ export default async function PricingPage() {
 
         <section>
           <SectionHeading
-            title="How we compare"
+            title="Why DeskPilot Academy"
             description="Operator-built, on-demand, individual or team — at a price built for actual operators."
           />
           <div className="mt-8">
-            <PricingComparisonTable />
+            <WhyDeskPilot />
           </div>
         </section>
 
