@@ -16,8 +16,9 @@ export const b2bInquirySchema = z.object({
   estimated_seats: z.coerce.number().int().min(1).max(50000),
   message: z.string().max(2000).optional().default(''),
   source: z.string().min(1).max(80),
-  // honeypot — must be empty
-  website: z.string().max(0).optional().default(''),
+  // honeypot — anything non-empty triggers silent acceptance in the route.
+  // schema accepts any string so we can detect-and-drop without leaking signal.
+  website: z.string().max(2000).optional().default(''),
 });
 
 export const resourceSchema = z.object({
