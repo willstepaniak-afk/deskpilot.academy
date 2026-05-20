@@ -1,0 +1,41 @@
+#!/usr/bin/env sh
+# Pre-commit secret scanner — blocks commits that introduce credentials,
+# JWTs, or API keys. Required because we burned a Supabase service-role key
+# once. Never again.
+#
+# One-time install on a fresh clone:
+#   npm install                 # husky bootstraps the hook via the prepare script
+#   brew install gitleaks       # macOS — or grab from
+#                               # https://github.com/gitleaks/gitleaks/releases
+#
+# Emergency bypass (only when you're certain — e.g. a redacted example):
+#   git commit --no-verify
+
+set -e
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  cat <<'MSG'
+
+  gitleaks is not installed — the pre-commit secret scan cannot run.
+
+  Install on macOS:
+      brew install gitleaks
+  Other systems:
+      https://github.com/gitleaks/gitleaks/releases
+
+  Then retry your commit. Or, if you're certain this commit is clean and
+  you need to bypass once:
+      git commit --no-verify
+  (please don't make that a habit)
+
+MSG
+  exit 1
+fi
+
+# Scan only the staged diff. --redact prevents secret values from being
+# printed back into terminal logs / CI artifacts.
+gitleaks protect \
+  --staged \
+  --redact \
+  --verbose \
+  --config .gitleaks.toml

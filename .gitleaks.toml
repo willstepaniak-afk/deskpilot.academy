@@ -1,0 +1,58 @@
+# gitleaks config — blocks commits that introduce secrets.
+# Used by the .husky/pre-commit hook.
+#
+# Manual scans:
+#   gitleaks detect --config .gitleaks.toml --redact --verbose          # full repo
+#   gitleaks protect --staged --config .gitleaks.toml --redact --verbose # staged-only
+
+title = "DeskPilot Academy — secret scan rules"
+
+[extend]
+# Inherit gitleaks' built-in rule pack (covers AWS, GCP, Stripe, Slack, npm, etc.)
+useDefault = true
+
+# ---------------- Custom rules ----------------
+
+[[rules]]
+id = "supabase-jwt"
+description = "Supabase JWT (anon or service_role) — never commit. Use Vercel env vars."
+regex = '''eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJ[A-Za-z0-9_=-]{20,}\.[A-Za-z0-9_=-]{20,}'''
+tags = ["supabase", "jwt", "high-severity"]
+
+[[rules]]
+id = "supabase-url-host"
+description = "Supabase project hostname — identifier, not a credential, but should not appear in committed source."
+regex = '''https?://[a-z0-9-]{12,}\.supabase\.co'''
+tags = ["supabase", "low-severity"]
+
+[[rules]]
+id = "posthog-api-key"
+description = "PostHog API key (phx_ / phc_ / phs_ prefix)."
+regex = '''(?i)\b(?:phx|phc|phs)_[A-Za-z0-9]{32,}\b'''
+tags = ["posthog", "high-severity"]
+
+[[rules]]
+id = "generic-jwt"
+description = "Generic three-segment JWT — catches any JWT-shaped token that the supabase-specific rule misses."
+regex = '''eyJ[A-Za-z0-9_=-]{8,}\.eyJ[A-Za-z0-9_=-]{8,}\.[A-Za-z0-9_=-]{8,}'''
+tags = ["jwt", "high-severity"]
+
+# ---------------- Allowlist ----------------
+
+[allowlist]
+description = "Paths and patterns where signals are safe."
+
+paths = [
+  '''.*\.lock''',
+  '''package-lock\.json''',
+  '''node_modules/.*''',
+  '''\.next/.*''',
+  '''legacy/.*''',
+  '''public/og-fallback\.png''',
+  '''\.gitleaks\.toml''',
+]
+
+regexes = [
+  # Placeholder JWTs in docs ("eyJexample.eyJexample.example" patterns)
+  '''eyJ[A-Z][a-z]{4,8}\.eyJ[A-Z][a-z]{4,8}\.example''',
+]

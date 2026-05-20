@@ -5,10 +5,14 @@ The marketing site for DeskPilot Academy — operator-built automotive dealershi
 ## Local development
 
 ```bash
-# Install dependencies
+# Install dependencies (this also bootstraps the husky pre-commit hook)
 npm install
 
-# Copy env template and fill in values
+# Install the secret scanner that the pre-commit hook depends on
+brew install gitleaks       # macOS
+# other systems: https://github.com/gitleaks/gitleaks/releases
+
+# Copy env template and fill in values (NEVER commit real keys)
 cp .env.example .env.local
 
 # Run dev server
@@ -16,6 +20,30 @@ npm run dev
 ```
 
 Open <http://localhost:3000>.
+
+## Secret-scanning pre-commit hook
+
+`.husky/pre-commit` runs `gitleaks protect --staged` against the gitleaks
+rules in `.gitleaks.toml` on every `git commit`. The hook **blocks** the
+commit if it sees:
+
+- Supabase JWTs (anon or service_role)
+- PostHog API keys (`phx_` / `phc_` / `phs_`)
+- Generic three-segment JWTs
+- Anything in gitleaks' built-in pack (AWS, GCP, Stripe, Slack, etc.)
+
+If you're certain a commit is clean and you must bypass once, use
+`git commit --no-verify` — but log the reason in the commit message.
+
+Run a full-repo scan manually any time:
+
+```bash
+npm run secrets:scan
+# or: gitleaks detect --config .gitleaks.toml --redact --verbose
+```
+
+> If `npm install` doesn't bootstrap the hook (no `.husky/_` directory
+> appears), run `npx husky` once to set it up.
 
 ## Before first deploy
 
