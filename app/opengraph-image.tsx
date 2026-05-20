@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { SITE } from '@/lib/site';
 import { LOCKED_H1 } from '@/lib/copy';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 export const alt = SITE.name;
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
@@ -40,8 +40,9 @@ export default async function OpengraphImage() {
             >
               D
             </div>
-            <div style={{ fontSize: 28, fontWeight: 600 }}>
-              DeskPilot <span style={{ color: '#94a3b8', fontWeight: 400 }}>Academy</span>
+            <div style={{ fontSize: 28, fontWeight: 600, display: 'flex', gap: 8 }}>
+              <span>DeskPilot</span>
+              <span style={{ color: '#94a3b8', fontWeight: 400 }}>Academy</span>
             </div>
           </div>
 
