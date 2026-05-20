@@ -21,8 +21,8 @@ const FACULTY: FacultyMember[] = [
   },
   // TODO(Will): confirm faculty
   ...Array.from({ length: 8 }, (_, i) => ({
-    id: `tbd-${i + 1}`,
-    name: 'TBD',
+    id: `placeholder-${i + 1}`,
+    name: 'Announcing Soon',
     title: 'Faculty — Position Open',
     bio: 'We are recruiting operators with on-the-desk experience to lead this campus. If that is you, the contact form is open.',
     expertise: [],

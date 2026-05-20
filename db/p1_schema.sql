@@ -59,22 +59,27 @@ create policy "service role full access b2b_inquiries" on public.b2b_inquiries
   for all using (auth.role() = 'service_role');
 
 ----------------------------------------------------------------------
--- resource_requests
+-- lead_magnet_downloads
 --   - Lead magnet email captures. Same email + same slug is allowed
---     to repeat (no unique constraint) — we want to see redownload
---     intent.
+--     to repeat (no unique constraint) — we want to see redownload /
+--     repeat-interest signal.
+--   - `notes` distinguishes notify-me captures (P1 state) from future
+--     actual downloads (post-content P2 state). Set to
+--     'notify-me-state' when the lead magnet ships in
+--     "Notify Me When Available" mode.
 ----------------------------------------------------------------------
-create table if not exists public.resource_requests (
+create table if not exists public.lead_magnet_downloads (
   id uuid primary key default gen_random_uuid(),
   email text not null,
   resource_slug text not null,
+  notes text,
   created_at timestamptz not null default now()
 );
 
-alter table public.resource_requests enable row level security;
+alter table public.lead_magnet_downloads enable row level security;
 
-drop policy if exists "service role full access resource_requests" on public.resource_requests;
-create policy "service role full access resource_requests" on public.resource_requests
+drop policy if exists "service role full access lead_magnet_downloads" on public.lead_magnet_downloads;
+create policy "service role full access lead_magnet_downloads" on public.lead_magnet_downloads
   for all using (auth.role() = 'service_role');
 
 ----------------------------------------------------------------------
@@ -132,5 +137,6 @@ create policy "service role write site_state" on public.site_state
 create index if not exists waitlist_created_at_idx on public.waitlist (created_at desc);
 create index if not exists waitlist_founders_interest_idx on public.waitlist (founders_tier_interest) where founders_tier_interest = true;
 create index if not exists b2b_inquiries_created_at_idx on public.b2b_inquiries (created_at desc);
-create index if not exists resource_requests_email_idx on public.resource_requests (email);
+create index if not exists lead_magnet_downloads_email_idx on public.lead_magnet_downloads (email);
+create index if not exists lead_magnet_downloads_resource_slug_idx on public.lead_magnet_downloads (resource_slug);
 create index if not exists campus_interest_campus_slug_idx on public.campus_interest (campus_slug);

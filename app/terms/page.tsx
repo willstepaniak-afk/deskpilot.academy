@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { SectionHeading } from '@/components/marketing/SectionHeading';
 import { SITE } from '@/lib/site';
 
+// TODO(Will): Replace this V1 boilerplate with attorney-reviewed terms
+// before DNS pointing. Recommended: Termly, GetTerms, or local counsel review.
+
 const URL = `${SITE.url}/terms`;
+const LAST_UPDATED = new Date().toISOString().slice(0, 10);
 
 export const metadata: Metadata = {
   title: 'Terms',
@@ -15,13 +18,6 @@ export const metadata: Metadata = {
 export default function TermsPage() {
   return (
     <Container className="py-16 max-w-3xl space-y-8 text-base">
-      <Alert variant="warning">
-        <AlertTitle>Draft — pending legal review</AlertTitle>
-        <AlertDescription>
-          The terms below outline our intended practices. Final language is pending review by counsel and may change before launch.
-        </AlertDescription>
-      </Alert>
-
       <SectionHeading title="Terms" />
 
       <section>
@@ -67,7 +63,10 @@ export default function TermsPage() {
       </section>
 
       <p className="text-xs text-muted-foreground">
-        Last updated: pending launch. Questions? Email {SITE.supportEmail}.
+        Questions? Email {SITE.supportEmail}.
+      </p>
+      <p className="text-xs text-muted-foreground italic">
+        Last updated: {LAST_UPDATED}. Version 1.0.
       </p>
     </Container>
   );
