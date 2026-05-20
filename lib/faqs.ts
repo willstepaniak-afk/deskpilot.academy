@@ -30,9 +30,9 @@ const FAQS: Faq[] = [
     featuredOnHome: true,
   },
   {
-    question: 'How is this different from Pinnacle, NADA Academy, or JM&A training?',
+    question: 'How is DeskPilot Academy different from other dealership training programs?',
     answer:
-      'Three differences. First, every instructor is a working operator. Second, the format is on-demand video plus AI deal simulations, not week-long off-site classes. Third, the price is built for individual operators, not just dealer-paid enrollments.',
+      'Three differences. First, every instructor is a working operator — not consultants who left the floor a decade ago, and not OEM-owned platforms whose content is filtered through a brand lens. Second, the format is on-demand video plus AI deal simulations, not week-long off-sites or PDF library dumps from legacy training products. Third, the price is built for the individual operator, not just dealer-paid enrollments — founders can subscribe themselves and own their development.',
     category: 'general',
     featuredOnHome: true,
   },

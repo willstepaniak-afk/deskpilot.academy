@@ -38,13 +38,7 @@ export function Footer() {
         </div>
         <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center">
           <p>© {new Date().getFullYear()} {SITE.name}. All rights reserved.</p>
-          <p>
-            Working on the SaaS side? Visit{' '}
-            <a className="underline" href={SITE.saasUrl} target="_blank" rel="noreferrer">
-              deskpilot.ai
-            </a>
-            .
-          </p>
+          <p>DeskPilot SaaS — coming soon.</p>
         </div>
       </Container>
     </footer>

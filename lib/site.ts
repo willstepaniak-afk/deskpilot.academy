@@ -9,7 +9,6 @@ export const SITE = {
   founderUrl: 'https://deskpilot.academy/about',
   contactEmail: 'will@deskpilot.academy',
   supportEmail: 'support@deskpilot.academy',
-  saasUrl: 'https://deskpilot.ai',
   description:
     'Operator-built automotive dealership training. The desk process — F&I, sales, desking, used-vehicle ops, fixed ops, and more — taught by working dealership operators, not consultants.',
   ogDescription:

@@ -90,7 +90,7 @@ export default async function PricingPage() {
         <section>
           <SectionHeading title="Pricing FAQ" />
           <div className="mt-6 max-w-3xl">
-            <FaqAccordion faqs={faqs} type="single" />
+            <FaqAccordion faqs={faqs} type="multiple" />
           </div>
         </section>
       </Container>

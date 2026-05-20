@@ -100,7 +100,7 @@ export default async function HomePage() {
         <section>
           <SectionHeading eyebrow="FAQ" title="Most-asked questions." />
           <div className="mt-6">
-            <FaqAccordion faqs={faqs} type="single" />
+            <FaqAccordion faqs={faqs} type="multiple" />
           </div>
         </section>
 

@@ -85,13 +85,12 @@ export default async function CampusDetailPage({
 }
 
 function LiveCampusView({ campus }: { campus: Campus }) {
-  const totalLessons = campus.courseList.reduce((s, m) => s + m.lessonCount, 0);
   return (
     <>
       <section>
         <SectionHeading
           title="Modules in this campus"
-          description={`${campus.courseList.length} modules · ${totalLessons} lessons.`}
+          description={`${campus.courseList.length} modules. Full curriculum, in production.`}
         />
         <ol className="mt-8 space-y-3">
           {campus.courseList.map((m, i) => (
@@ -103,7 +102,6 @@ function LiveCampusView({ campus }: { campus: Campus }) {
                     <h3 className="mt-1 text-lg font-semibold">{m.title}</h3>
                     <p className="mt-2 text-sm text-muted-foreground">{m.summary}</p>
                   </div>
-                  <Badge variant="outline">{m.lessonCount} lessons</Badge>
                 </div>
               </Card>
             </li>

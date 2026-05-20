@@ -19,7 +19,6 @@ export function buildOrganizationLd(): JsonLd {
       width: 512,
       height: 512,
     },
-    sameAs: [SITE.saasUrl],
     contactPoint: [
       {
         '@type': 'ContactPoint',

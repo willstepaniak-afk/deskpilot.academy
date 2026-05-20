@@ -24,8 +24,7 @@ export function CampusGrid({ campuses }: { campuses: Campus[] }) {
               <p className="mt-1 text-sm text-muted-foreground">{c.tagline}</p>
               {c.status === 'live' && c.courseList.length > 0 && (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  {c.courseList.length} modules ·{' '}
-                  {c.courseList.reduce((sum, m) => sum + m.lessonCount, 0)} lessons
+                  {c.courseList.length} modules · full curriculum
                 </p>
               )}
             </Card>

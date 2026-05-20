@@ -45,9 +45,9 @@ const CAMPUSES: Campus[] = [
         summary: 'Live objection trees for every product, every customer type, every situation.',
       },
       {
-        title: 'Compliance & Ethics',
+        title: 'F&I Compliance',
         lessonCount: 5,
-        summary: 'The lines you do not cross. Federal and state rules that protect you and the store.',
+        summary: 'The federal and state rules that apply at the F&I desk. The lines you do not cross — the rest is in the standalone Compliance campus.',
       },
       {
         title: 'Lender Intelligence',

@@ -11,7 +11,10 @@ export function Wordmark({ className }: { className?: string }) {
       )}
       aria-label="DeskPilot Academy home"
     >
-      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold">
+      <span
+        aria-hidden="true"
+        className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold"
+      >
         D
       </span>
       <span className="text-lg">
