@@ -17,6 +17,10 @@ on:
 
 permissions:
   contents: read
+  # pull-requests:read lets the action enumerate PR commits on
+  # pull_request-triggered runs. Without it the GitHub API returns
+  # 403 "Resource not accessible by integration" and the scan fails closed.
+  pull-requests: read
 
 jobs:
   gitleaks:
