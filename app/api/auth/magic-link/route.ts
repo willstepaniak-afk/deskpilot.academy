@@ -1,9 +1,27 @@
 import { NextResponse } from 'next/server';
 import { magicLinkSchema } from '@/lib/validators';
 import { createClient } from '@/lib/supabase/server';
-import { SITE } from '@/lib/site';
 
 export const runtime = 'nodejs';
+
+// Derive the origin the magic-link email should point back to from the
+// INCOMING request, not from SITE.url. SITE.url is pinned to the production
+// domain (correct for canonical/SEO URLs) — but using it here would send
+// preview-deployment magic links to production, where the PKCE code verifier
+// cookie doesn't exist, breaking the flow. This mirrors app/auth/callback's
+// x-forwarded-host pattern so magic link is host-agnostic across
+// preview / prod / localhost. Do NOT swap this back to SITE.url in a cleanup pass.
+function getRequestOrigin(request: Request): string {
+  const { origin } = new URL(request.url);
+  const forwardedHost = request.headers.get('x-forwarded-host');
+  const isLocal = process.env.NODE_ENV === 'development';
+  if (!isLocal && forwardedHost) {
+    const proto = request.headers.get('x-forwarded-proto') ?? 'https';
+    return `${proto}://${forwardedHost}`;
+  }
+  return origin;
+}
+
 
 // Server-gated magic-link send. The OTP email is dispatched ONLY after the
 // Cloudflare Turnstile token verifies — the browser never calls signInWithOtp
@@ -61,7 +79,7 @@ export async function POST(request: Request) {
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: `${SITE.url}/auth/callback` },
+    options: { emailRedirectTo: `${getRequestOrigin(request)}/auth/callback` },
   });
   if (error) {
     console.error('[magic-link] signInWithOtp error', error.message);
