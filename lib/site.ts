@@ -7,6 +7,7 @@ export const SITE = {
   founderName: 'Will Stepaniak',
   founderTitle: 'Founder & Lead Instructor',
   founderUrl: 'https://deskpilot.academy/about',
+  founderLinkedin: 'https://www.linkedin.com/in/will-stepaniak-b6bba01b/',
   contactEmail: 'will@deskpilot.academy',
   supportEmail: 'support@deskpilot.academy',
   description:

@@ -57,6 +57,16 @@ export default async function AboutPage() {
                       </li>
                     ))}
                   </ul>
+                  {will.linkedinUrl && (
+                    <a
+                      href={will.linkedinUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-4 inline-block text-sm text-primary underline-offset-4 hover:underline"
+                    >
+                      Connect with {will.name.split(' ')[0]} on LinkedIn ↗
+                    </a>
+                  )}
                 </div>
               </div>
             </Card>

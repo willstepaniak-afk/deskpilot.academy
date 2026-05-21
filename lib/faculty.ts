@@ -1,3 +1,5 @@
+import { SITE } from './site';
+
 export type FacultyMember = {
   id: string;
   name: string;
@@ -18,6 +20,7 @@ const FACULTY: FacultyMember[] = [
     expertise: ['F&I', 'Desking', 'Lender Programs', 'Menu Presentation'],
     tbd: false,
     imageKey: 'will',
+    linkedinUrl: SITE.founderLinkedin,
   },
   // TODO(Will): confirm faculty
   ...Array.from({ length: 8 }, (_, i) => ({
