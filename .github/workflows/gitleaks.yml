@@ -1,0 +1,35 @@
+name: Secret scan
+
+# Server-side backstop for the local .husky/pre-commit hook. Catches secrets
+# that reach GitHub through paths the local hook can't see — web-UI edits,
+# `git commit --no-verify` bypasses, or commits from a machine without the
+# hook installed. This is what would have caught the 2026-05-20 .env.example
+# leak (which was committed via the GitHub web editor).
+#
+# Free for personal-account repositories. (GitHub Organizations require a
+# GITLEAKS_LICENSE; this repo is a personal account, so none is needed.)
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
