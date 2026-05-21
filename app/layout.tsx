@@ -4,8 +4,6 @@ import { Inter } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
 import { JsonLd } from '@/components/seo/JsonLd';
 import { PostHogProvider } from '@/components/analytics/PostHogProvider';
 import { SITE } from '@/lib/site';
@@ -67,6 +65,9 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
+// Root layout owns the html/body shell, providers, sitewide JSON-LD, and
+// analytics ONLY. Marketing chrome (Header/Footer) lives in (marketing)/layout;
+// the dashboard and auth route groups render their own shells.
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const faculty = await getAllFaculty();
   const will = faculty.find((m) => m.id === 'will-stepaniak');
@@ -81,11 +82,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" className={`dark ${inter.variable}`}>
       <body className="min-h-screen font-sans">
-        <PostHogProvider>
-          <Header />
-          <main id="main">{children}</main>
-          <Footer />
-        </PostHogProvider>
+        <PostHogProvider>{children}</PostHogProvider>
         <JsonLd data={sitewideJsonLd} />
         <Analytics />
         <SpeedInsights />

@@ -35,7 +35,13 @@ export const campusInterestSchema = z.object({
   }),
 });
 
+export const magicLinkSchema = z.object({
+  email: z.string().email(),
+  turnstileToken: z.string().min(1).max(2048),
+});
+
 export type WaitlistInput = z.infer<typeof waitlistSchema>;
 export type B2bInquiryInput = z.infer<typeof b2bInquirySchema>;
 export type ResourceInput = z.infer<typeof resourceSchema>;
 export type CampusInterestInput = z.infer<typeof campusInterestSchema>;
+export type MagicLinkInput = z.infer<typeof magicLinkSchema>;
