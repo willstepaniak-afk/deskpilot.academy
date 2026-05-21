@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { Container } from '@/components/layout/Container';
 import { Hero } from '@/components/marketing/Hero';
-import { SocialProof } from '@/components/marketing/SocialProof';
+import { OperatorCredibility } from '@/components/marketing/OperatorCredibility';
 import { WhoThisIsFor } from '@/components/marketing/WhoThisIsFor';
 import { CampusGrid } from '@/components/marketing/CampusGrid';
 import { FeatureHighlights } from '@/components/marketing/FeatureHighlights';
@@ -33,14 +33,13 @@ export default async function HomePage() {
   ]);
 
   const featuredFaculty = faculty.slice(0, 3);
-  const featuredCampuses = [...campuses.slice(0, 6)];
 
   const pageJsonLd = [buildProductLd(), buildFaqPageLd(faqs)];
 
   return (
     <>
       <Hero />
-      <SocialProof />
+      <OperatorCredibility />
 
       <Container className="py-20 space-y-16">
         <section>
@@ -57,11 +56,11 @@ export default async function HomePage() {
         <section>
           <SectionHeading
             eyebrow="The campuses"
-            title="A campus for every desk."
+            title="Nine campuses. One subscription."
             description="Two live at launch. Seven more in the pipeline with operator instructors recruited per campus."
           />
           <div className="mt-10">
-            <CampusGrid campuses={featuredCampuses} />
+            <CampusGrid campuses={campuses} />
           </div>
         </section>
 
