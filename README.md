@@ -50,7 +50,7 @@ npm run secrets:scan
 1. **Apply the Supabase schema.** Open the Supabase SQL editor for the
    project and run `db/p1_schema.sql`. The file is idempotent — re-running
    is safe. It creates the five tables (`waitlist`, `b2b_inquiries`,
-   `resource_requests`, `campus_interest`, `site_state`), seeds the
+   `lead_magnet_downloads`, `campus_interest`, `site_state`), seeds the
    `site_state` single row, and enables row-level security with the
    correct policies.
 
@@ -64,6 +64,79 @@ npm run secrets:scan
 
 3. **Verify locally first.** `npm run build && npm run start`, then run
    the Phase 12 acceptance checks below.
+
+## P2 — Authentication setup
+
+P2 adds Google OAuth + magic-link auth (no email/password). `/login` and
+`/signup` exist but are intentionally **not linked from public navigation** —
+founders are provisioned manually until course delivery (P5).
+
+1. **Apply `db/p2_schema.sql`** in the Supabase SQL editor (after the P1
+   schema). Idempotent. Creates `profiles` (with `products[]` and
+   column-level RLS), the `handle_new_user()` trigger, and policies.
+2. **Google OAuth:** in Google Cloud Console create an OAuth 2.0 Web client;
+   set the authorized redirect URI to
+   `https://<project-ref>.supabase.co/auth/v1/callback`. In Supabase →
+   Auth → Providers → Google, paste the client ID + secret and enable.
+3. **Supabase Auth URL config:** Site URL `https://www.deskpilot.academy`;
+   add redirect URLs for `https://www.deskpilot.academy/auth/callback`, the
+   apex, `http://localhost:3000/auth/callback`, and
+   `https://*.vercel.app/auth/callback`. (No SaaS-domain entries — the future
+   SaaS domain is not locked.)
+4. **Cloudflare Turnstile** (bot resistance on the magic-link form): create a
+   free widget at Cloudflare → Turnstile and set `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+   + `TURNSTILE_SECRET_KEY` in Vercel (Production + Preview).
+5. **Provision a founder:** Supabase → Auth → Users → "Invite user". The
+   trigger auto-creates the profile row; then grant access via SQL editor:
+   ```sql
+   update public.profiles
+     set products = '{academy}', founders_member = true
+     where email = 'founder@example.com';
+   ```
+   `products`/`founders_member` are service-role-only, so this must run in the
+   SQL editor (service-role context), not from the app.
+
+Magic-link + invite emails use Supabase's built-in email in P2 (rate-limited —
+fine for internal/manual volume). Custom SMTP/Resend is deferred.
+
+## Monitoring & ops
+
+- **Vercel deploy notifications** (operator task): Vercel → Account Settings →
+  Notifications → enable deployment failure/error emails routed to
+  `will@deskpilot.academy`.
+- **Supabase project alerts** (operator task): Supabase → Project Settings →
+  enable alerts for high error rate, downtime, and billing/usage threshold,
+  routed to `will@deskpilot.academy`.
+- **Sentry / Slack:** intentionally NOT installed in P2 — deferred to a
+  post-P3 monitoring sprint when real users and revenue are flowing.
+
+### Weekly Supabase health-check ritual
+
+Run this in the Supabase SQL editor once a week. Verify the row counts track
+real activity and scan for garbage (malformed emails, suspicious bursts).
+(Table-name note: the "dealer inquiries" table is `b2b_inquiries`; the
+"founders counter" lives in `site_state`.)
+
+```sql
+-- row counts across the demand-capture tables
+select 'waitlist' as t, count(*) from public.waitlist
+union all select 'b2b_inquiries', count(*) from public.b2b_inquiries
+union all select 'lead_magnet_downloads', count(*) from public.lead_magnet_downloads
+union all select 'campus_interest', count(*) from public.campus_interest;
+
+-- founders counters (expect individual <= 100, b2b <= 10)
+select * from public.site_state;
+
+-- garbage scan: malformed waitlist emails, newest first
+select email, source, created_at from public.waitlist
+  where email !~ '^[^@]+@[^@]+\.[^@]+$'
+  order by created_at desc;
+
+-- auth garbage: profiles with no product access created a while ago
+select id, email, products, created_at from public.profiles
+  where products = '{}' and created_at < now() - interval '7 days'
+  order by created_at desc;
+```
 
 ## Repository layout
 

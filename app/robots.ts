@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
+  const disallow = ['/api/', '/thank-you', '/blog/', '/dashboard', '/login', '/signup', '/auth/'];
+
   const aiCrawlers = [
     'GPTBot',
     'ClaudeBot',
@@ -15,12 +17,8 @@ export default function robots(): MetadataRoute.Robots {
 
   return {
     rules: [
-      { userAgent: '*', allow: '/', disallow: ['/api/', '/thank-you', '/blog/'] },
-      ...aiCrawlers.map((userAgent) => ({
-        userAgent,
-        allow: '/',
-        disallow: ['/api/', '/thank-you', '/blog/'],
-      })),
+      { userAgent: '*', allow: '/', disallow },
+      ...aiCrawlers.map((userAgent) => ({ userAgent, allow: '/', disallow })),
     ],
     sitemap: `${SITE.url}/sitemap.xml`,
     host: SITE.url,
