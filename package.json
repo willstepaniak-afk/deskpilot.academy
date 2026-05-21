@@ -13,7 +13,6 @@
     "secrets:scan": "gitleaks detect --config .gitleaks.toml --redact --verbose"
   },
   "dependencies": {
-    "@marsidev/react-turnstile": "^1.5.2",
     "@radix-ui/react-accordion": "^1.2.2",
     "@radix-ui/react-dialog": "^1.1.4",
     "@radix-ui/react-label": "^2.1.1",

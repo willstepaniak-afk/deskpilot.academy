@@ -3,8 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'nodejs';
 
-// Handles both Google OAuth and magic-link returns. @supabase/ssr defaults to
-// the PKCE `?code=` flow, so a single exchangeCodeForSession covers both.
+// Handles the Google OAuth return. @supabase/ssr uses the PKCE `?code=` flow,
+// so exchangeCodeForSession turns the code into a session.
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');

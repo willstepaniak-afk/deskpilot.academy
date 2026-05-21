@@ -67,9 +67,18 @@ npm run secrets:scan
 
 ## P2 — Authentication setup
 
-P2 adds Google OAuth + magic-link auth (no email/password). `/login` and
-`/signup` exist but are intentionally **not linked from public navigation** —
-founders are provisioned manually until course delivery (P5).
+P2 ships **Google OAuth as the only login path** (no email/password, no magic
+link). `/login` and `/signup` exist but are intentionally **not linked from
+public navigation** — founders are provisioned manually until course delivery
+(P5).
+
+Why Google-only: magic-link auth was removed because Gmail's link-prefetch
+security scanner consumes the one-time OTP token before the user can click it,
+so Supabase returns `otp_expired` (a well-known Supabase + Gmail friction
+point, not a code bug). The fallback for operators who don't use Google is
+admin provisioning via Supabase "Invite user" — acceptable because all
+founders-phase access is admin-provisioned anyway. A typed **OTP code** flow
+(immune to link prefetch) is the right answer for public signup in P5+.
 
 1. **Apply `db/p2_schema.sql`** in the Supabase SQL editor (after the P1
    schema). Idempotent. Creates `profiles` (with `products[]` and
@@ -83,10 +92,7 @@ founders are provisioned manually until course delivery (P5).
    apex, `http://localhost:3000/auth/callback`, and
    `https://*.vercel.app/auth/callback`. (No SaaS-domain entries — the future
    SaaS domain is not locked.)
-4. **Cloudflare Turnstile** (bot resistance on the magic-link form): create a
-   free widget at Cloudflare → Turnstile and set `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
-   + `TURNSTILE_SECRET_KEY` in Vercel (Production + Preview).
-5. **Provision a founder:** Supabase → Auth → Users → "Invite user". The
+4. **Provision a founder:** Supabase → Auth → Users → "Invite user". The
    trigger auto-creates the profile row; then grant access via SQL editor:
    ```sql
    update public.profiles
@@ -96,8 +102,8 @@ founders are provisioned manually until course delivery (P5).
    `products`/`founders_member` are service-role-only, so this must run in the
    SQL editor (service-role context), not from the app.
 
-Magic-link + invite emails use Supabase's built-in email in P2 (rate-limited —
-fine for internal/manual volume). Custom SMTP/Resend is deferred.
+Invite emails use Supabase's built-in email in P2 (rate-limited — fine for
+manual provisioning volume). Custom SMTP/Resend is deferred.
 
 ## Monitoring & ops
 
