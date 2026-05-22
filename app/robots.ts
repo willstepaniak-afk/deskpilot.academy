@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 import { SITE } from '@/lib/site';
 
 export default function robots(): MetadataRoute.Robots {
-  const disallow = ['/api/', '/thank-you', '/blog/', '/dashboard', '/login', '/signup', '/auth/'];
+  const disallow = ['/api/', '/thank-you', '/blog/', '/dashboard', '/login', '/signup', '/auth/', '/subscribe'];
 
   const aiCrawlers = [
     'GPTBot',

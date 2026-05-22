@@ -11,6 +11,11 @@ export type Profile = {
   founders_member: boolean;
   created_at: string;
   updated_at: string;
+  // Billing columns (P3) — present on the row; selected via '*'.
+  stripe_customer_id?: string | null;
+  subscription_status?: string | null;
+  subscription_plan_id?: string | null;
+  current_period_end?: string | null;
 };
 
 // cache() dedupes these within a single request so the dashboard layout and
