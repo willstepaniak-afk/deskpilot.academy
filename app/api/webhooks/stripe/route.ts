@@ -13,8 +13,6 @@ import {
 
 export const runtime = 'nodejs';
 
-// Only these 8 event types are handled. Everything else is acknowledged 200
-// and ignored.
 const HANDLED = new Set<string>([
   'checkout.session.completed',
   'customer.subscription.created',
@@ -46,8 +44,7 @@ export async function POST(request: Request) {
     return new NextResponse('Invalid signature', { status: 400 });
   }
 
-  // Idempotency: first writer wins. A unique violation (23505) means we've
-  // already seen this event — ack and do nothing.
+  // Idempotency: first writer wins. 23505 = already seen -> ack, do nothing.
   const { error: insErr } = await service
     .from('stripe_events')
     .insert({ event_id: event.id, event_type: event.type });
@@ -117,9 +114,29 @@ function customerIdOf(value: string | { id: string } | null | undefined): string
   return typeof value === 'string' ? value : value.id;
 }
 
+// The interval Stripe is actually billing. billing_interval is NOT NULL (§4.2),
+// so never fall back to null when a plan fails to resolve — fall back to here.
+// A real recurring subscription always carries this.
+function intervalOf(sub: Stripe.Subscription): string | null {
+  return sub.items?.data?.[0]?.price?.recurring?.interval ?? null;
+}
+
+// Resolve a Stripe subscription id -> our subscriptions.id uuid (for payments FK).
+async function subUuidFor(
+  service: SupabaseClient,
+  stripeSubId: string | null,
+): Promise<string | null> {
+  if (!stripeSubId) return null;
+  const { data } = await service
+    .from('subscriptions')
+    .select('id')
+    .eq('stripe_subscription_id', stripeSubId)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
 // ---- handlers -------------------------------------------------------------
 
-// Primary "they're in" signal — make sure the customer id is persisted.
 async function onCheckoutCompleted(
   session: Stripe.Checkout.Session,
   service: SupabaseClient,
@@ -146,25 +163,7 @@ async function onSubscriptionCreated(
   const plan = priceId ? await resolvePlanByPrice(service, priceId) : null;
   const periodEnd = subscriptionPeriodEndISO(sub);
 
-  // Founder claim: only if this is a founder price and the row isn't already
-  // marked is_founder. claim_founder_seat() atomically decrements the counter
-  // and returns whether a seat was actually secured.
-  let isFounder = false;
-  if (plan?.isFounder) {
-    const { data: existing } = await service
-      .from('subscriptions')
-      .select('is_founder')
-      .eq('stripe_subscription_id', sub.id)
-      .maybeSingle();
-    if (existing?.is_founder === true) {
-      isFounder = true;
-    } else {
-      const { data: claimed, error: rpcErr } = await service.rpc('claim_founder_seat');
-      if (rpcErr) console.error('[stripe] claim_founder_seat error', rpcErr.message);
-      isFounder = claimed === true;
-    }
-  }
-
+  // Row FIRST (is_founder defaults false), so the claim has a row to flip. (C1/C2)
   await service.from('subscriptions').upsert(
     {
       user_id: userId,
@@ -173,8 +172,8 @@ async function onSubscriptionCreated(
       stripe_price_id: priceId,
       plan_id: plan?.planId ?? null,
       status: sub.status,
-      is_founder: isFounder,
-      interval: plan?.interval ?? null,
+      is_founder: false,
+      billing_interval: plan?.interval ?? intervalOf(sub),
       cancel_at_period_end: sub.cancel_at_period_end ?? false,
       current_period_end: periodEnd,
       past_due_since: null,
@@ -183,6 +182,16 @@ async function onSubscriptionCreated(
     },
     { onConflict: 'stripe_subscription_id' },
   );
+
+  // Claim SECOND. The function does the atomic dedup
+  // (UPDATE ... WHERE is_founder IS NOT TRUE) so concurrent/retried
+  // deliveries cannot double-burn a seat. No manual SELECT-then-decide. (C1)
+  if (plan?.isFounder) {
+    const { error: rpcErr } = await service.rpc('claim_founder_seat', {
+      p_stripe_subscription_id: sub.id,
+    });
+    if (rpcErr) console.error('[stripe] claim_founder_seat error', rpcErr.message);
+  }
 
   await service
     .from('profiles')
@@ -221,7 +230,7 @@ async function onSubscriptionUpdated(
       status: sub.status,
       stripe_price_id: priceId,
       plan_id: plan?.planId ?? null,
-      interval: plan?.interval ?? null,
+      billing_interval: plan?.interval ?? intervalOf(sub),
       cancel_at_period_end: sub.cancel_at_period_end ?? false,
       current_period_end: periodEnd,
       canceled_at: canceledAt,
@@ -238,7 +247,6 @@ async function onSubscriptionUpdated(
     })
     .eq('id', userId);
 
-  // active or past_due (during grace) keep access; canceled revokes.
   if (sub.status === 'canceled') {
     await revokeAcademy(service, userId);
   } else {
@@ -269,11 +277,15 @@ async function onInvoicePaid(invoice: Stripe.Invoice, service: SupabaseClient): 
   const customerId = customerIdOf(invoice.customer);
   const subscriptionId = subscriptionIdOf(invoice);
   const userId = await userIdFromCustomer(service, customerId);
+  const periodEndUnix = invoice.lines?.data?.[0]?.period?.end;
+  const periodEnd = periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : undefined;
+
+  const subUuid = await subUuidFor(service, subscriptionId); // C3
 
   await service.from('payments').insert({
     user_id: userId,
+    subscription_id: subUuid, // C3: payments has subscription_id uuid, not stripe_subscription_id
     stripe_invoice_id: invoice.id,
-    stripe_subscription_id: subscriptionId,
     amount_cents: invoice.amount_paid,
     currency: invoice.currency,
     status: 'paid',
@@ -284,12 +296,15 @@ async function onInvoicePaid(invoice: Stripe.Invoice, service: SupabaseClient): 
   if (subscriptionId) {
     await service
       .from('subscriptions')
-      .update({ status: 'active', past_due_since: null, updated_at: new Date().toISOString() })
+      .update({
+        status: 'active',
+        past_due_since: null,
+        ...(periodEnd ? { current_period_end: periodEnd } : {}), // L8
+        updated_at: new Date().toISOString(),
+      })
       .eq('stripe_subscription_id', subscriptionId);
   }
   if (userId) {
-    const periodEndUnix = invoice.lines?.data?.[0]?.period?.end;
-    const periodEnd = periodEndUnix ? new Date(periodEndUnix * 1000).toISOString() : undefined;
     await service
       .from('profiles')
       .update({
@@ -297,6 +312,7 @@ async function onInvoicePaid(invoice: Stripe.Invoice, service: SupabaseClient): 
         ...(periodEnd ? { current_period_end: periodEnd } : {}),
       })
       .eq('id', userId);
+    await grantAcademy(service, userId); // H6: restore access after a late successful retry
   }
 }
 
@@ -305,10 +321,12 @@ async function onInvoiceFailed(invoice: Stripe.Invoice, service: SupabaseClient)
   const subscriptionId = subscriptionIdOf(invoice);
   const userId = await userIdFromCustomer(service, customerId);
 
+  const subUuid = await subUuidFor(service, subscriptionId); // C3
+
   await service.from('payments').insert({
     user_id: userId,
+    subscription_id: subUuid, // C3
     stripe_invoice_id: invoice.id,
-    stripe_subscription_id: subscriptionId,
     amount_cents: invoice.amount_due,
     currency: invoice.currency,
     status: 'failed',
@@ -326,7 +344,11 @@ async function onInvoiceFailed(invoice: Stripe.Invoice, service: SupabaseClient)
     if (existing && existing.status !== 'past_due') {
       await service
         .from('subscriptions')
-        .update({ status: 'past_due', past_due_since: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .update({
+          status: 'past_due',
+          past_due_since: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq('stripe_subscription_id', subscriptionId);
       if (userId) {
         await service.from('profiles').update({ subscription_status: 'past_due' }).eq('id', userId);
@@ -349,8 +371,8 @@ async function onCustomerSync(customer: Stripe.Customer, service: SupabaseClient
 }
 
 function subscriptionIdOf(invoice: Stripe.Invoice): string | null {
-  // Invoice.subscription is a string | Subscription | null across versions;
-  // newer versions nest it under parent. Resolve defensively.
+  // invoice.subscription is string | Subscription | null across versions;
+  // newer versions nest under parent.subscription_details. Resolve defensively.
   const direct = (invoice as unknown as { subscription?: string | { id: string } | null }).subscription;
   if (direct) return customerIdOf(direct);
   const parentSub = (invoice as unknown as {
