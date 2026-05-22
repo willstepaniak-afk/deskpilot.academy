@@ -44,13 +44,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <Card className="p-8 text-center">
               <h1 className="text-2xl font-bold tracking-tight">Your account is ready</h1>
               <p className="mt-3 text-sm text-muted-foreground">
-                You&apos;re signed in, but Academy access hasn&apos;t been switched on for your account
-                yet. During the founders phase, access is granted manually as cohorts open.
-                We&apos;ll email you the moment your seat is live.
+                You&apos;re signed in, but you don&apos;t have Academy access yet. Subscribe to unlock
+                every campus — founders pricing is live while seats last.
               </p>
               <div className="mt-6 flex justify-center gap-3">
-                <Button asChild variant="outline">
-                  <Link href="/campuses">Browse the campuses</Link>
+                <Button asChild variant="accent">
+                  <Link href="/subscribe">Subscribe</Link>
                 </Button>
                 <Button asChild variant="ghost">
                   <a href={`mailto:${SITE.contactEmail}`}>Contact us</a>
