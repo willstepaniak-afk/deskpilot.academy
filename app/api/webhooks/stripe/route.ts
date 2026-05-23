@@ -172,7 +172,6 @@ async function onSubscriptionCreated(
       stripe_price_id: priceId,
       plan_id: plan?.planId ?? null,
       status: sub.status,
-      is_founder: false,
       billing_interval: plan?.interval ?? intervalOf(sub),
       cancel_at_period_end: sub.cancel_at_period_end ?? false,
       current_period_end: periodEnd,
