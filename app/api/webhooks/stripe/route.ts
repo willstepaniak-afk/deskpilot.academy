@@ -247,11 +247,18 @@ async function onSubscriptionUpdated(
     })
     .eq('id', userId);
 
-  if (sub.status === 'canceled') {
-    await revokeAcademy(service, userId);
-  } else {
+  if (sub.status === 'active') {
     await grantAcademy(service, userId);
+  } else if (
+    sub.status === 'canceled' ||
+    sub.status === 'unpaid' ||
+    sub.status === 'incomplete_expired'
+  ) {
+    await revokeAcademy(service, userId);
   }
+  // past_due / incomplete / trialing: leave products[] untouched. During the 72h
+  // grace, access stays ON (granted at creation); the failed-payment handler +
+  // cron/lazy-guard own revocation. Re-granting here re-opens what dunning closed.
 }
 
 async function onSubscriptionDeleted(
@@ -341,7 +348,7 @@ async function onInvoiceFailed(invoice: Stripe.Invoice, service: SupabaseClient)
       .select('status, past_due_since')
       .eq('stripe_subscription_id', subscriptionId)
       .maybeSingle();
-    if (existing && existing.status !== 'past_due') {
+    if (existing && !existing.past_due_since) {
       await service
         .from('subscriptions')
         .update({

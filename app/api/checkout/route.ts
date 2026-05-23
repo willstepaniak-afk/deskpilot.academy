@@ -26,6 +26,20 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Don't let an already-subscribed user create a second subscription -> double charge.
+  const { data: liveSubs } = await service
+    .from('subscriptions')
+    .select('id')
+    .eq('user_id', user.id)
+    .in('status', ['active', 'trialing', 'past_due'])
+    .limit(1);
+  if (liveSubs && liveSubs.length > 0) {
+    return NextResponse.json(
+      { error: 'You already have an active subscription.' },
+      { status: 409 },
+    );
+  }
+
   let payload: unknown;
   try {
     payload = await request.json();
