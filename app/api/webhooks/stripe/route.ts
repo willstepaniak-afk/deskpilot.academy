@@ -163,7 +163,11 @@ async function onSubscriptionCreated(
   const plan = priceId ? await resolvePlanByPrice(service, priceId) : null;
   const periodEnd = subscriptionPeriodEndISO(sub);
 
-  // Row FIRST (is_founder defaults false), so the claim has a row to flip. (C1/C2)
+  // Row FIRST so the claim has a row to flip. (C1/C2)
+  // is_founder is intentionally NOT written here: on re-delivery (onConflict)
+  // writing false would stomp a claimed seat back to false and let the RPC
+  // decrement the counter a second time. On insert the column default applies;
+  // on conflict the existing is_founder is preserved. (N1)
   await service.from('subscriptions').upsert(
     {
       user_id: userId,
@@ -246,18 +250,17 @@ async function onSubscriptionUpdated(
     })
     .eq('id', userId);
 
-  if (sub.status === 'active') {
+  // Access transitions. (N2)
+  // active/trialing -> grant. past_due -> leave alone: access STAYS ON during
+  // the 72h grace; onInvoiceFailed + the dunning sweep + the lazy guard own
+  // revocation after it elapses. Re-granting here would re-open access the
+  // sweep just closed. Everything else (canceled/unpaid/incomplete_expired/
+  // paused) -> revoke.
+  if (sub.status === 'active' || sub.status === 'trialing') {
     await grantAcademy(service, userId);
-  } else if (
-    sub.status === 'canceled' ||
-    sub.status === 'unpaid' ||
-    sub.status === 'incomplete_expired'
-  ) {
+  } else if (sub.status !== 'past_due') {
     await revokeAcademy(service, userId);
   }
-  // past_due / incomplete / trialing: leave products[] untouched. During the 72h
-  // grace, access stays ON (granted at creation); the failed-payment handler +
-  // cron/lazy-guard own revocation. Re-granting here re-opens what dunning closed.
 }
 
 async function onSubscriptionDeleted(

@@ -7,7 +7,6 @@ import { getStripe } from '@/lib/stripe';
 export const runtime = 'nodejs';
 
 const bodySchema = z.object({ interval: z.enum(['month', 'year']) });
-
 const SUCCESS_URL = 'https://www.deskpilot.academy/dashboard?welcome=1';
 const CANCEL_URL = 'https://www.deskpilot.academy/subscribe?canceled=1';
 
@@ -26,20 +25,6 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  // Don't let an already-subscribed user create a second subscription -> double charge.
-  const { data: liveSubs } = await service
-    .from('subscriptions')
-    .select('id')
-    .eq('user_id', user.id)
-    .in('status', ['active', 'trialing', 'past_due'])
-    .limit(1);
-  if (liveSubs && liveSubs.length > 0) {
-    return NextResponse.json(
-      { error: 'You already have an active subscription.' },
-      { status: 409 },
-    );
-  }
-
   let payload: unknown;
   try {
     payload = await request.json();
@@ -53,11 +38,21 @@ export async function POST(request: Request) {
   // 2. Resolve (or create) the Stripe customer, keyed to the Supabase user.
   const { data: profile, error: profileErr } = await service
     .from('profiles')
-    .select('id, email, full_name, stripe_customer_id')
+    .select('id, email, full_name, stripe_customer_id, products')
     .eq('id', user.id)
     .single();
   if (profileErr || !profile) {
     return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
+  }
+
+  // N3: refuse a second subscription if the user already has access. Without
+  // this, a subscribed user who revisits /subscribe can create a second active
+  // subscription and get double-charged.
+  if (Array.isArray(profile.products) && profile.products.includes('academy')) {
+    return NextResponse.json(
+      { error: 'You already have an active subscription. Manage it from your billing portal.' },
+      { status: 409 },
+    );
   }
 
   let customerId: string | null = profile.stripe_customer_id;
