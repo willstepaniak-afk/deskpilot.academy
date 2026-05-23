@@ -26,11 +26,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, mode: 'logged' });
   }
 
-  // Idempotent insert on (email). founders_tier_interest is stored as a marketing
-  // signal ONLY — it must never touch the billing seat counter.
-  // site_state.founders_individual_remaining has exactly ONE writer:
-  // claim_founder_seat(), called from the Stripe webhook on a real PAID founder
-  // subscription. A waitlist signup is interest, not a purchased seat.
+  // Idempotent insert on (email). founders_tier_interest is stored as marketing
+  // data only. It must NOT touch site_state.founders_individual_remaining —
+  // that counter has exactly one writer: claim_founder_seat(), called from the
+  // Stripe webhook on a real PAID founder subscription.
   const { error: insertErr } = await client
     .from('waitlist')
     .upsert(
