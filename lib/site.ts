@@ -10,6 +10,15 @@ export const SITE = {
   founderLinkedin: 'https://www.linkedin.com/in/will-stepaniak-b6bba01b/',
   contactEmail: 'will@deskpilot.academy',
   supportEmail: 'support@deskpilot.academy',
+  officePhone: '+19044601935',
+  officePhoneDisplay: '(904) 460-1935',
+  address: {
+    street: '7643 Gate Pkwy Suite 1465',
+    locality: 'Jacksonville',
+    region: 'FL',
+    postalCode: '32256',
+    country: 'US',
+  },
   description:
     'Operator-built automotive dealership training. The desk process — F&I, sales, desking, used-vehicle ops, fixed ops, and more — taught by working dealership operators, not consultants.',
   ogDescription:

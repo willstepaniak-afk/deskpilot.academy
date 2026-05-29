@@ -19,11 +19,21 @@ export function buildOrganizationLd(): JsonLd {
       width: 512,
       height: 512,
     },
+    telephone: SITE.officePhone,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: SITE.address.street,
+      addressLocality: SITE.address.locality,
+      addressRegion: SITE.address.region,
+      postalCode: SITE.address.postalCode,
+      addressCountry: SITE.address.country,
+    },
     contactPoint: [
       {
         '@type': 'ContactPoint',
         contactType: 'customer support',
         email: SITE.supportEmail,
+        telephone: SITE.officePhone,
         availableLanguage: ['English'],
       },
     ],
