@@ -16,6 +16,15 @@ export function Footer() {
             <p className="text-xs text-muted-foreground">
               Contact: <a className="underline" href={`mailto:${SITE.contactEmail}`}>{SITE.contactEmail}</a>
             </p>
+            <address className="not-italic text-xs text-muted-foreground space-y-1">
+              <p>
+                Office: <a className="underline" href={`tel:${SITE.officePhone}`}>{SITE.officePhoneDisplay}</a>
+              </p>
+              <p>
+                {SITE.address.street}<br />
+                {SITE.address.locality}, {SITE.address.region} {SITE.address.postalCode}
+              </p>
+            </address>
           </div>
           <div>
             <h3 className="text-sm font-semibold mb-3">Product</h3>
